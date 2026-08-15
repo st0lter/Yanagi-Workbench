@@ -20,6 +20,8 @@ class ImageConverterFrame(ctk.CTkFrame):
         self.files_log = ctk.CTkTextbox(master=self, corner_radius=0)
         self.files_log.configure(state='disabled')
         self.files_log.grid(row=1, column=0, padx=10, pady=(0, 10), sticky='nsew')
+        if hasattr(self.master, 'register_theme_widget'):
+            self.master.register_theme_widget(self.files_log)
 
         self.button_frame = ctk.CTkFrame(master=self)
         self.button_frame.grid(row=2, column=0, padx=10, pady=(0, 10), sticky='ew')

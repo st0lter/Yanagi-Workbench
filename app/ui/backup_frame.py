@@ -21,6 +21,8 @@ class BackupFrame(ctk.CTkFrame):
         configure_text_tags(self.backup_log, MSG_COLORS)
         self.backup_log.configure(state='disabled')
         self.backup_log.grid(row=1, column=0, columnspan=2, padx=10, pady=(0, 10), sticky='nsew')
+        if hasattr(self.master, 'register_theme_widget'):
+            self.master.register_theme_widget(self.backup_log)
 
         self.selected_input_files = []
         self.selected_input_folders = []

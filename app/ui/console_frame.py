@@ -17,9 +17,11 @@ class ConsoleFrame(ctk.CTkFrame):
 
         self.console = ctk.CTkTextbox(master=self, corner_radius=0)
         configure_text_tags(self.console, MSG_COLORS)
+        self.console.grid(row=1, column=0, padx=10, pady=(0, 10), sticky='nsew')
+        if hasattr(self.master, 'register_theme_widget'):
+            self.master.register_theme_widget(self.console)
         self._write_console_message('Welcome to Yanagi Workbench\n', 'default')
         self._write_console_message('Created by Juri Han Padaria\n', 'default')
-        self.console.grid(row=1, column=0, padx=10, pady=(0, 10), sticky='nsew')
 
         self.console_entry = ctk.CTkEntry(master=self, placeholder_text='Type your command here')
         self.console_entry.grid(row=2, column=0, padx=10, pady=10, sticky='ew')

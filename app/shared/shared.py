@@ -5,14 +5,16 @@ from pathlib import Path
 
 # --- CONSTANTS ---
 
+from app.shared.theme import get_msg_colors as _get_msg_colors, MSG_COLORS as _MSG_COLORS, LIGHT_MSG_COLORS as _LIGHT_MSG_COLORS
+
 # Global color map for console and logs — reuse across the project
-MSG_COLORS = {
-    'info': '#2374AB',    # Rich Cerulean
-    'error': '#D90429',   # Flag Red
-    'success': '#0CCA4A', # Jade Green
-    'message': '#9CFFD9', # Aquamarine
-    'default': '#EDF2F4'  # Platinum
-}
+MSG_COLORS = dict(_MSG_COLORS)
+LIGHT_MSG_COLORS = dict(_LIGHT_MSG_COLORS)
+
+
+def get_msg_colors(mode: str = 'dark'):
+    """Return the text palette for the requested app theme."""
+    return _get_msg_colors(mode)
 
 # Icon files (filenames relative to project `icons/` folder)
 _ICON_FILES = {

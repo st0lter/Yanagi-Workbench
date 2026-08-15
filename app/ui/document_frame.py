@@ -24,6 +24,8 @@ class DocumentFrame(ctk.CTkFrame):
         configure_text_tags(self.file_log, MSG_COLORS)
         self.file_log.configure(state="disabled")
         self.file_log.grid(row=1, column=0, columnspan=2, padx=10, pady=(0, 10), sticky="nsew")
+        if hasattr(self.master, 'register_theme_widget'):
+            self.master.register_theme_widget(self.file_log)
 
         self.format_frame = ctk.CTkFrame(self)
         self.format_frame.grid_columnconfigure(0, weight=1)
