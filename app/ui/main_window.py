@@ -1,21 +1,9 @@
-import customtkinter as ctk
+from PyQt6.QtWidgets import QApplication, QWidget
+import sys
 
-class OptionsFrame(ctk.CTkFrame):
-    def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+# Create the application
+app = QApplication(sys.argv)
 
-        self.columnconfigure(0, weight=1)
-
-        self.title = ctk.CTkLabel(self, text='Yanagi Workbench')
-        self.title.grid(row=0, column=0, padx=12, pady=12, sticky='nsew')
-
-
-class App(ctk.CTk):
-    def __init__(self):
-        super().__init__()
-
-        self.options_frame = OptionsFrame(self)
-        self.options_frame.grid(row=0, column=0)
-
-        self.main_task_frame = MainTaskFrame(self)
-        self.main_task_frame.grid(row=0, column=1)
+# Create a widget
+window = QWidget()
+window.show()
