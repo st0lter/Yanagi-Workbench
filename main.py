@@ -1,5 +1,6 @@
-from app.ui.main_window import app
+from app import App
 
 # Start the main application
 if __name__ == '__main__':
-	app.exec()
+	app = App()
+	app.mainloop()
