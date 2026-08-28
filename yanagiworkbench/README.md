@@ -1,4 +1,4 @@
-# YanagiWorkbench
+# yanagiworkbench
 
 A bootstack application using AppShell navigation.
 

@@ -1,5 +1,5 @@
 [app]
-name = "YanagiWorkbench"
+name = "yanagiworkbench"
 id = "com.example.yanagiworkbench"
 entry = "src/yanagiworkbench/main.py"
 template = "appshell"

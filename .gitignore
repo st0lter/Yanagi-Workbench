@@ -1,7 +1,2 @@
-__pycache__/*
-.venv/*
-app/__pycache__/*
-app/config/__pycache__/*
-app/shared/__pycache__/*
-app/tools/__pycache__/*
-app/ui/__pycache__/*
+yanagiworkbench/src/yanagiworkbench/__pycache__/*
+yanagiworkbench/src/yanagiworkbench/pages/__pycache__/*

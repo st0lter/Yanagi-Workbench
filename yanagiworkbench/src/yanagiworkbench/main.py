@@ -1,5 +1,5 @@
 """
-YanagiWorkbench - A bootstack application.
+yanagiworkbench - A bootstack application.
 
 Run with: python -m yanagiworkbench
 """
@@ -13,7 +13,7 @@ from yanagiworkbench.pages.settings_page import build_settings
 def main() -> None:
     """Application entry point."""
     with bs.AppShell(
-        title="YanagiWorkbench",
+        title="yanagiworkbench",
         theme="bootstrap-light",
         size=(1000, 650),
         show_statusbar=True,
@@ -25,7 +25,7 @@ def main() -> None:
             with bar.add_menu("Help") as help_menu:
                 help_menu.add_action(
                     "About",
-                    on_click=lambda: bs.alert("YanagiWorkbench", title="About"),
+                    on_click=lambda: bs.alert("yanagiworkbench", title="About"),
                 )
             bar.add_spacer()
             bar.add_theme_toggle()

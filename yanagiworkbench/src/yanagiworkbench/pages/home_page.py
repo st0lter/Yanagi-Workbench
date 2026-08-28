@@ -10,7 +10,7 @@ def build_home():
     (configured on `nav.add_page(...)` in main.py) supplies the padding and gap,
     so there is no extra layout wrapper here.
     """
-    bs.Label("Welcome to YanagiWorkbench", font="heading-xl")
+    bs.Label("Welcome to yanagiworkbench", font="heading-xl")
     bs.Label(
         "This is your home page. Edit this file to get started.",
         wrap_width=500,
