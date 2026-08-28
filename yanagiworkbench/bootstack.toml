@@ -1,0 +1,8 @@
+[app]
+name = "YanagiWorkbench"
+id = "com.example.yanagiworkbench"
+entry = "src/yanagiworkbench/main.py"
+template = "appshell"
+
+[layout]
+default_container = "grid"
