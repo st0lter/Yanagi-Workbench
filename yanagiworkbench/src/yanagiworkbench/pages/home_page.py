@@ -10,16 +10,18 @@ def build_home():
     (configured on `nav.add_page(...)` in main.py) supplies the padding and gap,
     so there is no extra layout wrapper here.
     """
-    bs.Label("Welcome to yanagiworkbench", font="heading-xl")
+    bs.Label("Welcome to Yanagi Workbench", font="heading-xl")
     bs.Label(
-        "This is your home page. Edit this file to get started.",
+        "Here are some steps for you to get started!",
         wrap_width=500,
     )
     with bs.GroupBox("Getting Started", grow=True, horizontal="stretch"):
         bs.Label(
-            "Add your widgets here.\n\n"
-            "To add another page:\n"
-            "  1. Run \'bootstack add page <Name>\' to generate the file.\n"
-            "  2. In main.py, add a \'with nav.add_page(...):\' block inside\n"
-            "     your \'shell.page_nav()\' and call the page's build_* function in it."
+            "\n\n"
+            "On the sidebard, you can find the tabs that will guide you to each section\n"
+            "Each tab will have their own functonalities, for example:\n"
+            "\n"
+            ">>> Image Handler - It will manage image operations, such as format conversion and resizing, for example\n"
+            ">>> Backup - It handles backup file operations for folders and files\n"
+            ">>> Document Manager - It is able to manage PDF/DOCX documents operations."
         )
