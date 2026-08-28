@@ -3,6 +3,7 @@ name = "yanagiworkbench"
 id = "com.example.yanagiworkbench"
 entry = "src/yanagiworkbench/main.py"
 template = "appshell"
+version = "1.0.0 - Wyrm"
 
 [layout]
 default_container = "grid"
