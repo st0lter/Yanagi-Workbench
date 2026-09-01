@@ -1,5 +1,5 @@
 babel==2.18.0
-bootstack==0.3.2
+bootstack==0.4.1
 dateparser==1.4.2
 pillow==12.0.0
 Pygments==2.21.0
