@@ -2,3 +2,4 @@ __pycache__/*
 app/__pycache__/*
 app/handlers/__pycache__/*
 app/ui/__pycache__/*
+app/config/__pycache__/*
