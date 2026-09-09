@@ -20,10 +20,10 @@ source .venv/bin/activate
 After activating, paste these commands below on the terminal.
 ```bash
 # Install system dependencies
-sudo apt install pandoc
+sudo apt install pandoc python3-tk
 
 # Install Python main dependencies
-pip install ttkbootstrap pypandoc pypdf
+pip install ttkbootstrap pypandoc pypdf pandas numpy openpyxl
 ```
 
 When activated, you can finally run the program by typing:
