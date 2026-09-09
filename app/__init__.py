@@ -1,7 +1,7 @@
 import ttkbootstrap as ttk
 from app.ui.backup_page import BackupPage
 #from app.ui.file_manager_frame import FileManagerFrame
-#from app.ui.image_handler_frame import ImageHandlerFrame
+from app.ui.image_page import ImagePage
 from app.ui.home_page import HomePage
 
 
@@ -67,6 +67,8 @@ class ContentFrame(ttk.Frame):
         self.pages = {
             "Home": HomePage,
             "Backup": BackupPage,
+            "File Manager": None,  # Placeholder for FileManagerFrame
+            "Image Handler": ImagePage
         }
         self.current_page = None
 
