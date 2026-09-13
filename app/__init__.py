@@ -1,9 +1,11 @@
 import ttkbootstrap as ttk
 from app.ui.backup_page import BackupPage
-#from app.ui.file_manager_frame import FileManagerFrame
+from app.ui.file_page import FilePage
 from app.ui.image_page import ImagePage
 from app.ui.home_page import HomePage
 
+from app.config import FONTS
+from app.config.version import DISPLAY_VERSION
 
 # Navigation frame class
 class NavigationFrame(ttk.Frame):
@@ -67,7 +69,7 @@ class ContentFrame(ttk.Frame):
         self.pages = {
             "Home": HomePage,
             "Backup": BackupPage,
-            "File Manager": None,  # Placeholder for FileManagerFrame
+            "File Manager": FilePage,
             "Image Handler": ImagePage
         }
         self.current_page = None
@@ -82,7 +84,14 @@ class ContentFrame(ttk.Frame):
         self.current_page = page_class(self)
         self.current_page.grid(row=0, column=0, sticky="nsew")
 
-        
+
+class Footer(ttk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self._create_widgets()
+
+    def _create_widgets(self):
+        ttk.Label(self, text=f"{DISPLAY_VERSION}", font=FONTS['default']).grid(row=0, column=0, pady=5, padx=10, sticky="w")
 
 
 # Main application class
@@ -99,6 +108,9 @@ class App(ttk.Window):
 
         self.nav_frame = NavigationFrame(self, self.content_frame)
         self.nav_frame.grid(row=0, column=0, sticky="ns")
+
+        self.footer = Footer(self)
+        self.footer.grid(row=1, column=0, columnspan=2, sticky="ew")
 
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=1)
