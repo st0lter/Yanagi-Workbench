@@ -4,7 +4,7 @@ from app.ui.file_page import FilePage
 from app.ui.image_page import ImagePage
 from app.ui.home_page import HomePage
 
-from app.config import FONTS
+from app.config import FONTS, MIN_SIZE, TITLE, THEMES
 from app.config.version import DISPLAY_VERSION
 
 # Navigation frame class
@@ -97,9 +97,9 @@ class Footer(ttk.Frame):
 # Main application class
 class App(ttk.Window):
     def __init__(self):
-        super().__init__(themename="darkly")
-        self.title("Yanagi Workbench")
-        self.geometry("800x600")
+        super().__init__(themename=THEMES['Tokyo Night (Dark)'])
+        self.title(TITLE)
+        self.geometry(MIN_SIZE)
         self.create_widgets()
 
     def create_widgets(self):
@@ -114,5 +114,6 @@ class App(ttk.Window):
 
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=0)
         self.content_frame.show_page(self.content_frame.pages["Home"])
         
