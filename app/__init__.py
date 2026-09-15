@@ -15,6 +15,9 @@ class NavigationFrame(ttk.Frame):
         self._create_widgets()
 
     def _create_widgets(self):
+        # Keep the settings button at the bottom of the navigation panel.
+        self.rowconfigure(4, weight=1)
+
         # Create navigation buttons
         self.home_btn = ttk.Button(
             self,
@@ -44,6 +47,13 @@ class NavigationFrame(ttk.Frame):
         )
         self.image_btn.grid(row=3, column=0, pady=5, padx=10, sticky="ew")
 
+        self.settings_btn = ttk.Button(
+            self,
+            text="Settings",
+            command=lambda: self._show_page("Settings"),
+        )
+        self.settings_btn.grid(row=5, column=0, pady=5, padx=10, sticky="ew")
+
     def _show_page(self, page_name):
         # Search for the page class in the frame's dictionary
         page_class = self.content_frame.pages.get(page_name)
@@ -70,7 +80,8 @@ class ContentFrame(ttk.Frame):
             "Home": HomePage,
             "Backup": BackupPage,
             "File Manager": FilePage,
-            "Image Handler": ImagePage
+            "Image Handler": ImagePage,
+            "Settings": None,  # Placeholder for future settings page
         }
         self.current_page = None
 

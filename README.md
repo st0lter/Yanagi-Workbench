@@ -16,10 +16,10 @@ Current development version.
 
 - [x] Establish the desktop application structure
 - [x] Add the home page and feature navigation
-- [ ] Add backup scheme
+- [x] Add backup scheme
 - [ ] Add image conversion
 - [ ] Add file handling 
-- [ ] Implement settings section
+- [x] Implement settings section
 - [ ] Check for possible bugs and release
 
 ### v0.2.0 - Drake

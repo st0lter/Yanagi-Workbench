@@ -11,9 +11,3 @@ class FilePage(ttk.Frame):
         ttk.Label(self, text="Welcome to the File Page!", font=FONTS["bold"]).grid(row=0, column=0, pady=10, padx=10)
 
         ttk.Label(self, text="This is the file page of the application.", font=FONTS["default"]).grid(row=1, column=0, pady=5, padx=10)
-
-        ttk.Label(self,
-                  text="Use the navigation buttons on the left to access different features of the application.",
-                  font=FONTS["default"]).grid(row=2, column=0, pady=5, padx=10)
-
-        ttk.Label(self, text="Enjoy your experience!", font=FONTS["italic"]).grid(row=3, column=0, pady=5, padx=10)
