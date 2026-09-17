@@ -1,8 +1,9 @@
 import ttkbootstrap as ttk
-from app.ui.backup_page import BackupPage
-from app.ui.file_page import FilePage
-from app.ui.image_page import ImagePage
-from app.ui.home_page import HomePage
+from app.pages.backup import BackupPage
+from app.pages.file import FilePage
+from app.pages.image import ImagePage
+from app.pages.home import HomePage
+#from app.pages.config import ConfigPage
 
 from app.config import FONTS, MIN_SIZE, TITLE, THEMES
 from app.config.version import DISPLAY_VERSION
