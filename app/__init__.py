@@ -3,7 +3,7 @@ from app.pages.backup import BackupPage
 from app.pages.file import FilePage
 from app.pages.image import ImagePage
 from app.pages.home import HomePage
-#from app.pages.config import ConfigPage
+from app.pages.settings import SettingsPage
 
 from app.config import FONTS, MIN_SIZE, TITLE, THEMES
 from app.config.version import DISPLAY_VERSION
@@ -68,9 +68,9 @@ class NavigationFrame(ttk.Frame):
 
 
 # Content frame class
-class ContentFrame(ttk.Frame):
+class ContentFrame(ttk.ScrolledFrame):
     def __init__(self, parent):
-        super().__init__(parent)
+        super().__init__(parent, auto_hide=True)
 
         # Set the grid configuration to allow the content frame to expand
         self.grid_rowconfigure(0, weight=1)
@@ -82,7 +82,7 @@ class ContentFrame(ttk.Frame):
             "Backup": BackupPage,
             "File Manager": FilePage,
             "Image Handler": ImagePage,
-            "Settings": None,  # Placeholder for future settings page
+            "Settings": SettingsPage  # Placeholder for future settings page
         }
         self.current_page = None
 
