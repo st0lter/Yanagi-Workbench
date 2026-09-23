@@ -1,4 +1,6 @@
 import ttkbootstrap as ttk
+import tkinter as tk
+from tkinter import messagebox
 from app.pages.backup import BackupPage
 from app.pages.file import FilePage
 from app.pages.image import ImagePage
@@ -7,6 +9,47 @@ from app.pages.settings import SettingsPage
 
 from app.config import FONTS, MIN_SIZE, TITLE, THEMES
 from app.config.version import DISPLAY_VERSION
+
+
+class MenuBar(tk.Menu):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        file_menu = tk.Menu(self, tearoff=False)
+        file_menu.add_command(
+            label="Home",
+            command=lambda: parent.content_frame.show_page(HomePage),
+        )
+        file_menu.add_command(
+            label="Backup",
+            command=lambda: parent.content_frame.show_page(BackupPage),
+        )
+        file_menu.add_command(
+            label="File Manager",
+            command=lambda: parent.content_frame.show_page(FilePage),
+        )
+        file_menu.add_command(
+            label="Image Handler",
+            command=lambda: parent.content_frame.show_page(ImagePage),
+        )
+        file_menu.add_command(
+            label="Settings",
+            command=lambda: parent.content_frame.show_page(SettingsPage),
+        )
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=parent.destroy)
+        self.add_cascade(label="File", menu=file_menu)
+
+        help_menu = tk.Menu(self, tearoff=False)
+        help_menu.add_command(
+            label="Credits",
+            command=lambda: messagebox.showinfo(
+                "Credits",
+                f"{TITLE}\nVersion {DISPLAY_VERSION}",
+                parent=parent,
+            ),
+        )
+        self.add_cascade(label="Help", menu=help_menu)
 
 # Navigation frame class
 class NavigationFrame(ttk.Frame):
@@ -117,6 +160,9 @@ class App(ttk.Window):
     def create_widgets(self):
         self.content_frame = ContentFrame(self)
         self.content_frame.grid(row=0, column=1, sticky="nsew")
+
+        self.menu_bar = MenuBar(self)
+        self.config(menu=self.menu_bar)
 
         self.nav_frame = NavigationFrame(self, self.content_frame)
         self.nav_frame.grid(row=0, column=0, sticky="ns")
