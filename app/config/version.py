@@ -1,3 +1,3 @@
 VERSION = '0.1.0'
-CODENAME = 'Wyrm'
+CODENAME = 'Serpent'
 DISPLAY_VERSION = f"v{VERSION} ({CODENAME})"
