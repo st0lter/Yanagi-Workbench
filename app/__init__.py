@@ -113,7 +113,7 @@ class NavigationFrame(ttk.Frame):
 # Content frame class
 class ContentFrame(ttk.ScrolledFrame):
     def __init__(self, parent):
-        super().__init__(parent, auto_hide=True)
+        super().__init__(parent)
 
         # Set the grid configuration to allow the content frame to expand
         self.grid_rowconfigure(0, weight=1)
