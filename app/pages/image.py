@@ -127,7 +127,7 @@ class ImagePage(ttk.Frame):
         self.options_frame.grid(row=2, column=0, padx=10, pady=10, sticky='nsew')
 
         self.convert = ttk.Button(
-            self.options_frame, text='Convert', icon='file-text',
+            self.options_frame, text='Convert', icon='play',
             bootstyle='success', command=self.convert_images,
         )
         self.convert.grid(row=0, column=0, padx=5, pady=5, sticky='ew')
