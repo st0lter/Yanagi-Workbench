@@ -4,7 +4,10 @@ import datetime
 from threading import Event
 
 class BackupHandler:
-    def backup(self, source, destination, source_type, on_progress, cancel_event, on_started=None):
+    def backup(
+        self, source, destination, source_type, on_progress, cancel_event,
+        on_started=None, destination_type='Folder',
+    ):
         # Create a separate timestamped folder for each backup operation.
         backup_name = datetime.datetime.now().strftime('BACKUP-%Y-%m-%d_%H:%M:%S')
         backup_destination = os.path.join(destination, backup_name)
@@ -15,8 +18,30 @@ class BackupHandler:
 
         if source_type == 'Folder':
             folder_source = source[0] if not isinstance(source, (str, bytes, os.PathLike)) else source
-            return self.copy_folder(folder_source, backup_destination, on_progress, cancel_event)
-        return self.copy_files(source, backup_destination, on_progress, cancel_event)
+            completed = self.copy_folder(
+                folder_source, backup_destination, on_progress, cancel_event,
+            )
+        else:
+            completed = self.copy_files(source, backup_destination, on_progress, cancel_event)
+
+        if not completed:
+            if destination_type == 'ZIP' and os.path.exists(backup_destination):
+                shutil.rmtree(backup_destination)
+            return False
+
+        if destination_type == 'ZIP':
+            if cancel_event.is_set():
+                shutil.rmtree(backup_destination)
+                return False
+            shutil.make_archive(
+                backup_destination,
+                'zip',
+                root_dir=destination,
+                base_dir=backup_name,
+            )
+            shutil.rmtree(backup_destination)
+
+        return True
 
     @staticmethod
     def _count_files(source, source_type):

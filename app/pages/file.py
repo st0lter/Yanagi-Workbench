@@ -1,28 +1,36 @@
 import ttkbootstrap as ttk
-from concurrent.futures import ProcessPoolExecutor
-from multiprocessing import cpu_count
+from concurrent.futures import CancelledError, ProcessPoolExecutor
+from multiprocessing import Manager, cpu_count
 from pathlib import Path
 from queue import Empty, Queue
 import shutil
 import tempfile
+import zipfile
 from tkinter import filedialog, messagebox
 
 from app.config import FONTS
 from app.handlers.file import FileHandler
 
 
-def _convert_file(source, destination, source_type):
+def _convert_file(source, destination, source_type, cancellation_event):
     """Run one conversion outside the Tkinter process."""
-    handler = FileHandler()
     source_path = Path(source)
     destination_path = Path(destination)
+    if cancellation_event.is_set():
+        return 'cancelled', str(source_path), ''
 
+    handler = FileHandler()
     if source_type == 'PDF':
         converted_path = handler.convert_pdf_to_docx(source_path, destination_path)
     else:
         converted_path = handler.convert_docx_to_pdf(source_path, destination_path)
 
-    return str(converted_path), str(source_path)
+    converted_path = Path(converted_path)
+    if cancellation_event.is_set():
+        converted_path.unlink(missing_ok=True)
+        return 'cancelled', str(source_path), ''
+
+    return 'success', str(converted_path), str(source_path)
 
 
 class FilePage(ttk.Frame):
@@ -33,45 +41,55 @@ class FilePage(ttk.Frame):
         self.converted_files = {}
         self.temporary_directory = Path(tempfile.mkdtemp(prefix='yanagi-converted-'))
         self.conversion_executor = None
+        self.conversion_manager = None
+        self.cancellation_event = None
+        self.conversion_futures = []
         self.conversion_queue = Queue()
         self.conversion_total = 0
         self.conversion_completed = 0
+        self.conversion_errors = 0
+        self.cancellation_requested = False
         self._create_widgets()
 
     def _create_widgets(self):
-        # Let the page and its main content use the available window space.
         self.columnconfigure(0, weight=1)
-        self.rowconfigure(2, weight=1)
-        self.rowconfigure(3, weight=3)
+        self.rowconfigure(3, weight=1)
+        self.rowconfigure(4, weight=3)
 
-        # --- Source frame ---
-        ttk.Label(self, text='File Manager', font=FONTS['bold']).grid(row=0, column=0, padx=10, pady=10, sticky='ew')
+        ttk.Label(self, text='File Manager', font=FONTS['bold']).grid(
+            row=0, column=0, padx=10, pady=10, sticky='w',
+        )
         
-        self.source_frame = ttk.Labelframe(self, text='Select origin')
+        self.source_frame = ttk.Labelframe(self, text='Source and destination')
         self.source_frame.grid(row=1, column=0, padx=10, pady=10, sticky='nsew')
         self.source_frame.columnconfigure(2, weight=1)
 
-        # First row - source of the file
-        ttk.Label(self.source_frame, text='From:').grid(row=0, column=0, padx=5, pady=5, sticky='w')
+        ttk.Label(self.source_frame, text='From:').grid(
+            row=0, column=0, padx=5, pady=5, sticky='w',
+        )
 
         self.original_filetype = ttk.StringVar()
         self.from_filetype_box = ttk.Combobox(self.source_frame,
-                                            textvariable=self.original_filetype,  
-                                            values=['PDF', 'DOCX'])
+                                              textvariable=self.original_filetype,
+                                              values=['PDF', 'DOCX'])
         self.from_filetype_box.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
         self.from_filetype_box.configure(state='readonly')
         self.from_filetype_box.set('PDF')
         self.from_filetype_box.bind('<<ComboboxSelected>>', self._clear_source_selection)
 
-        self.original_document = ttk.Entry(self.source_frame) # Original document filepath
+        self.original_document = ttk.Entry(self.source_frame)
         self.original_document.grid(row=0, column=2, padx=5, pady=5, sticky='ew')
         self.original_document.configure(state='readonly')
 
-        self.select_origin_button = ttk.Button(self.source_frame, text='Select file', icon='folder', bootstyle='primary', command=self.get_og_path)
+        self.select_origin_button = ttk.Button(
+            self.source_frame, text='Select file', icon='folder',
+            bootstyle='primary', command=self.get_og_path,
+        )
         self.select_origin_button.grid(row=0, column=3, padx=5, pady=5, sticky='ew')
 
-        # Second row - file's destination
-        ttk.Label(self.source_frame, text='To:').grid(row=1, column=0, padx=5, pady=5, sticky='w')
+        ttk.Label(self.source_frame, text='To:').grid(
+            row=1, column=0, padx=5, pady=5, sticky='w',
+        )
 
         self.desired_filetype = ttk.StringVar()
         self.to_filetype = ttk.Combobox(self.source_frame,
@@ -82,8 +100,7 @@ class FilePage(ttk.Frame):
         self.to_filetype.set('DOCX')
         self.to_filetype.bind('<<ComboboxSelected>>', self._update_convert_button_state)
 
-        
-        self.destination_path = ttk.Entry(self.source_frame) # The path where the final document will be saved
+        self.destination_path = ttk.Entry(self.source_frame)
         self.destination_path.grid(row=1, column=2, padx=5, pady=5, sticky='ew')
         self.destination_path.configure(state='readonly')
 
@@ -95,22 +112,45 @@ class FilePage(ttk.Frame):
             command=self.get_destination_path,
         )
         self.select_destination_button.grid(row=1, column=3, padx=5, pady=5, sticky='ew')
-        
-        self.convert_button = ttk.Button(self.source_frame, text='Convert', icon='file-text', bootstyle='success', command=self.convert)
-        self.convert_button.grid(row=1, column=4, padx=5, pady=5, sticky='ew')
-        self.convert_button.configure(state='disabled')
 
-        # --- Converted files frame ---
+        self.options_frame = ttk.Labelframe(self, text='Options')
+        self.options_frame.grid(row=2, column=0, padx=10, pady=10, sticky='nsew')
+
+        self.convert_button = ttk.Button(
+            self.options_frame, text='Convert', icon='file-text',
+            bootstyle='success', command=self.convert,
+        )
+        self.convert_button.grid(row=0, column=0, padx=5, pady=5, sticky='ew')
+
+        self.cancel_button = ttk.Button(
+            self.options_frame, text='Cancel', icon='x-circle',
+            bootstyle='danger', command=self.cancel_conversion,
+        )
+        self.cancel_button.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
+        self.cancel_button.configure(state='disabled')
+
+        self.save_log_button = ttk.Button(
+            self.options_frame, text='Save log', icon='floppy',
+            bootstyle='info', command=self.save_log,
+        )
+        self.save_log_button.grid(row=0, column=2, padx=5, pady=5, sticky='ew')
+
+        self.save_zip_button = ttk.Button(
+            self.options_frame, text='Save in zip', icon='file-earmark-zip',
+            bootstyle='primary', command=self.save_in_zip,
+        )
+        self.save_zip_button.grid(row=0, column=3, padx=5, pady=5, sticky='ew')
+        self.save_zip_button.configure(state='disabled')
+
         self.files_frame = ttk.LabelFrame(self, text='Converted files')
-        self.files_frame.grid(row=2, column=0, padx=10, pady=10, sticky='nsew')
+        self.files_frame.grid(row=3, column=0, padx=10, pady=10, sticky='nsew')
         self.files_frame.columnconfigure(0, weight=1)
 
         self.empty_files_label = ttk.Label(self.files_frame, text='Your files will appear here.')
         self.empty_files_label.grid(row=0, column=0, padx=5, pady=5, sticky='w')
 
-        # --- Log frame ---
         self.log_frame = ttk.LabelFrame(self, text='Log')
-        self.log_frame.grid(row=3, column=0, padx=10, pady=10, sticky='nsew')
+        self.log_frame.grid(row=4, column=0, padx=10, pady=10, sticky='nsew')
         self.log_frame.columnconfigure(0, weight=1)
         self.log_frame.rowconfigure(0, weight=1)
 
@@ -159,10 +199,7 @@ class FilePage(ttk.Frame):
         self._update_convert_button_state()
 
     def _update_convert_button_state(self, _event=None):
-        has_source_files = bool(self.selected_files)
-        has_destination = bool(self.destination_path.get())
-        different_filetypes = self.original_filetype.get() != self.desired_filetype.get()
-        state = 'normal' if has_source_files and has_destination and different_filetypes else 'disabled'
+        state = 'disabled' if self.conversion_executor is not None else 'normal'
         self.convert_button.configure(state=state)
 
     def _append_log(self, message):
@@ -187,6 +224,8 @@ class FilePage(ttk.Frame):
                    command=lambda path=converted_path, frame=line: self._delete_file(path, frame)).grid(
                        row=0, column=2, padx=3, sticky='e')
         self.converted_files[converted_path] = line
+        state = 'disabled' if self.conversion_executor is not None else 'normal'
+        self.save_zip_button.configure(state=state)
 
     def _save_file(self, converted_path, line):
         if not converted_path.exists():
@@ -205,6 +244,7 @@ class FilePage(ttk.Frame):
         self.converted_files.pop(converted_path, None)
         if not self.converted_files:
             self.empty_files_label.grid()
+            self.save_zip_button.configure(state='disabled')
 
     def _finish_conversion(self, converted_path, source_path):
         self._add_converted_file(converted_path)
@@ -212,6 +252,7 @@ class FilePage(ttk.Frame):
         self.progress.step(1)
 
     def _conversion_failed(self, source_path, error):
+        self.conversion_errors += 1
         self._append_log(f'Failed: {source_path} ({error})')
         self.progress.step(1)
 
@@ -219,17 +260,33 @@ class FilePage(ttk.Frame):
         if self.conversion_executor is not None:
             self.conversion_executor.shutdown(wait=False)
             self.conversion_executor = None
+        if self.conversion_manager is not None:
+            self.conversion_manager.shutdown()
+            self.conversion_manager = None
+        self.cancellation_event = None
+        self.conversion_futures = []
         self.select_origin_button.configure(state='normal')
         self.select_destination_button.configure(state='normal')
         self.from_filetype_box.configure(state='readonly')
         self.to_filetype.configure(state='readonly')
+        self.cancel_button.configure(state='disabled')
+        self.save_log_button.configure(state='normal')
+        self.save_zip_button.configure(
+            state='normal' if self.converted_files else 'disabled'
+        )
         self._update_convert_button_state()
-        self._append_log('Work completed.')
+        if self.cancellation_requested:
+            self._append_log('Conversion cancelled.')
+        elif self.conversion_errors:
+            self._append_log('Work completed with errors.')
+        else:
+            self._append_log('Work completed.')
 
     def _conversion_result_ready(self, future, source_path):
         try:
-            converted_path, source_path = future.result()
-            result = ('success', converted_path, source_path)
+            result = future.result()
+        except CancelledError:
+            result = ('cancelled', str(source_path), '')
         except Exception as error:
             result = ('error', str(source_path), str(error))
         self.conversion_queue.put(result)
@@ -244,8 +301,10 @@ class FilePage(ttk.Frame):
             self.conversion_completed += 1
             if status == 'success':
                 self._finish_conversion(Path(first_value), Path(second_value))
-            else:
+            elif status == 'error':
                 self._conversion_failed(first_value, second_value)
+            else:
+                self.progress.step(1)
 
         if self.conversion_completed < self.conversion_total:
             self.after(100, self._process_conversion_results)
@@ -270,6 +329,9 @@ class FilePage(ttk.Frame):
 
         self.progress.configure(maximum=len(self.selected_files), value=0)
         self.convert_button.configure(state='disabled')
+        self.cancel_button.configure(state='normal')
+        self.save_log_button.configure(state='normal')
+        self.save_zip_button.configure(state='disabled')
         self.select_origin_button.configure(state='disabled')
         self.select_destination_button.configure(state='disabled')
         self.from_filetype_box.configure(state='disabled')
@@ -278,9 +340,14 @@ class FilePage(ttk.Frame):
 
         self.conversion_total = len(self.selected_files)
         self.conversion_completed = 0
+        self.conversion_errors = 0
+        self.cancellation_requested = False
         available_workers = max(1, (cpu_count() or 2) - 1)
         worker_count = min(self.conversion_total, available_workers, 4)
+        self.conversion_manager = Manager()
+        self.cancellation_event = self.conversion_manager.Event()
         self.conversion_executor = ProcessPoolExecutor(max_workers=worker_count)
+        self.conversion_futures = []
 
         for source in self.selected_files:
             source_path = Path(source)
@@ -290,10 +357,62 @@ class FilePage(ttk.Frame):
                 str(source_path),
                 str(output_path),
                 source_type,
+                self.cancellation_event,
             )
+            self.conversion_futures.append(future)
             future.add_done_callback(
                 lambda completed_future, source_path=source_path:
                 self._conversion_result_ready(completed_future, source_path)
             )
 
         self.after(100, self._process_conversion_results)
+
+    def cancel_conversion(self):
+        if self.cancellation_event is None:
+            return
+        self.cancellation_requested = True
+        self.cancellation_event.set()
+        for future in self.conversion_futures:
+            future.cancel()
+        self.cancel_button.configure(state='disabled')
+        self._append_log('Cancellation requested.')
+
+    def save_log(self):
+        log_path = filedialog.asksaveasfilename(
+            title='Save log',
+            defaultextension='.txt',
+            filetypes=[('Text files', '*.txt'), ('All files', '*.*')],
+        )
+        if not log_path:
+            return
+        try:
+            Path(log_path).write_text(self.log.get('1.0', 'end-1c'), encoding='utf-8')
+        except OSError as error:
+            self._append_log(f'Error saving log: {error}')
+            return
+        self._append_log(f'Log saved: {log_path}')
+
+    def save_in_zip(self):
+        if self.conversion_executor is not None:
+            self._append_log('Error: wait for the conversion to finish before creating the zip.')
+            return
+        available_files = [path for path in self.converted_files if path.exists()]
+        if not available_files:
+            self._append_log('Error: there are no converted files to zip.')
+            return
+
+        zip_path = filedialog.asksaveasfilename(
+            title='Save converted files in zip',
+            defaultextension='.zip',
+            filetypes=[('ZIP archives', '*.zip')],
+        )
+        if not zip_path:
+            return
+        try:
+            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as archive:
+                for converted_path in available_files:
+                    archive.write(converted_path, arcname=converted_path.name)
+        except OSError as error:
+            self._append_log(f'Error creating zip: {error}')
+            return
+        self._append_log(f'Converted files saved in: {zip_path}')

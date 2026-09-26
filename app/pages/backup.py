@@ -14,71 +14,91 @@ class BackupPage(ttk.Frame):
         self._create_widgets()
 
     def _create_widgets(self):
-        for row in range(4):
-            self.rowconfigure(row, weight=0)
-        self.rowconfigure(4, weight=1)
         self.columnconfigure(0, weight=1)
+        self.rowconfigure(3, weight=1)
 
-        # Create backup-specific widgets
-        ttk.Label(self, text="Backup Frame", font=FONTS["bold"]).grid(row=0, column=0, pady=10, padx=10)
+        ttk.Label(self, text='Backup', font=FONTS['bold']).grid(
+            row=0, column=0, pady=10, padx=10, sticky='w',
+        )
 
-        ttk.Label(self, text="This is where you can execute the backup of your files.", font=FONTS["default"]).grid(row=1, column=0, pady=10, padx=10)
+        self.origin_frame = ttk.Labelframe(self, text='Source and destination')
+        self.origin_frame.grid(row=1, column=0, pady=10, padx=10, sticky='nsew')
+        self.origin_frame.columnconfigure(2, weight=1)
+        self.origin_frame.columnconfigure(3, weight=1)
 
-        # Origin frame
-        self.origin_frame = ttk.Labelframe(self, text='Origin')
-        self.origin_frame.grid(row=2, column=0, pady=10, padx=10, sticky='nsew')
-        self.origin_frame.columnconfigure(1, weight=1)
-
-        ttk.Label(self.origin_frame, text='Select file/folder:').grid(row=0, column=0, pady=5, padx=5, sticky='w')
-
-        self.source = ttk.Entry(self.origin_frame)
-        self.source.grid(row=0, column=1, pady=5, padx=5, sticky='ew')
-        self.source.configure(state='disabled')
-
-        self.source_btn = ttk.Button(self.origin_frame, text='Select source', icon='folder', bootstyle='primary', command=self._select_source)
-        self.source_btn.grid(row=0, column=2, pady=5, padx=5, sticky='e')
+        ttk.Label(self.origin_frame, text='From:').grid(
+            row=0, column=0, pady=5, padx=5, sticky='w',
+        )
 
         self.option = ttk.Combobox(self.origin_frame, values=['File', 'Folder'], state='readonly')
-        self.option.grid(row=0, column=3, pady=5, padx=5, sticky='e')
+        self.option.grid(row=0, column=1, pady=5, padx=5, sticky='ew')
         self.option.set('File')
         self.option.bind('<<ComboboxSelected>>', self._clear_source_selection)
 
-        # Destination folder
-        self.destination_frame = ttk.Labelframe(self, text='Destination')
-        self.destination_frame.grid(row=3, column=0, pady=10, padx=10, sticky='nsew')
-        self.destination_frame.columnconfigure(1, weight=1)
+        self.source = ttk.Entry(self.origin_frame)
+        self.source.grid(row=0, column=2, pady=5, padx=5, sticky='ew')
+        self.source.configure(state='disabled')
 
-        ttk.Label(self.destination_frame, text='Select folder:').grid(row=0, column=0, pady=5, padx=5, sticky='w')
+        self.source_btn = ttk.Button(
+            self.origin_frame, text='Select source', icon='folder',
+            bootstyle='primary', command=self._select_source,
+        )
+        self.source_btn.grid(row=0, column=3, pady=5, padx=5, sticky='ew')
 
-        self.destination = ttk.Entry(self.destination_frame)
-        self.destination.grid(row=0, column=1, pady=5, padx=5, sticky='ew')
+        ttk.Label(self.origin_frame, text='To:').grid(
+            row=1, column=0, pady=5, padx=5, sticky='w',
+        )
+
+        self.destination_option = ttk.Combobox(
+            self.origin_frame, values=['Folder', 'ZIP'], state='readonly',
+        )
+        self.destination_option.grid(row=1, column=1, pady=5, padx=5, sticky='ew')
+        self.destination_option.set('Folder')
+
+        self.destination = ttk.Entry(self.origin_frame)
+        self.destination.grid(row=1, column=2, pady=5, padx=5, sticky='ew')
         self.destination.configure(state='disabled')
 
-        self.backup_btn = ttk.Button(self.destination_frame, text='Select destination', icon='folder', bootstyle='primary', command=self._select_destination)
-        self.backup_btn.grid(row=0, column=2, pady=5, padx=5)
+        self.backup_btn = ttk.Button(
+            self.origin_frame, text='Select destination', icon='folder',
+            bootstyle='primary', command=self._select_destination,
+        )
+        self.backup_btn.grid(row=1, column=3, pady=5, padx=5, sticky='ew')
 
-        # Operation frame
-        self.operation_frame = ttk.Labelframe(self, text='Operations')
-        self.operation_frame.grid(row=4, column=0, pady=10, padx=10, sticky='nsew')
-        self.operation_frame.rowconfigure(1, weight=1)
+        self.operation_frame = ttk.Labelframe(self, text='Options')
+        self.operation_frame.grid(row=2, column=0, pady=10, padx=10, sticky='nsew')
         for column in range(3):
-            self.operation_frame.columnconfigure(column, weight=1)
+            self.operation_frame.columnconfigure(column, weight=0)
 
-        self.convert_btn = ttk.Button(self.operation_frame, text='Start', bootstyle='success', command=self._execute_backup)
+        self.convert_btn = ttk.Button(
+            self.operation_frame, text='Start', icon='play',
+            bootstyle='success', command=self._execute_backup,
+        )
         self.convert_btn.grid(row=0, column=0, pady=5, padx=5, sticky='ew')
 
-        self.cancel_btn = ttk.Button(self.operation_frame, text='Cancel', bootstyle='danger', command=self._cancel_backup, state='disabled')
+        self.cancel_btn = ttk.Button(
+            self.operation_frame, text='Cancel', icon='x-circle',
+            bootstyle='danger', command=self._cancel_backup, state='disabled',
+        )
         self.cancel_btn.grid(row=0, column=1, pady=5, padx=5, sticky='ew')
 
-        self.save_log_btn = ttk.Button(self.operation_frame, text='Save log', bootstyle='info', command=self._save_log)
+        self.save_log_btn = ttk.Button(
+            self.operation_frame, text='Save log', icon='floppy',
+            bootstyle='info', command=self._save_log,
+        )
         self.save_log_btn.grid(row=0, column=2, pady=5, padx=5, sticky='ew')
 
-        self.log = ttk.Text(self.operation_frame)
-        self.log.grid(row=1, column=0, pady=5, padx=5, columnspan=3, sticky='nsew')
+        self.log_frame = ttk.Labelframe(self, text='Log')
+        self.log_frame.grid(row=3, column=0, pady=10, padx=10, sticky='nsew')
+        self.log_frame.columnconfigure(0, weight=1)
+        self.log_frame.rowconfigure(0, weight=1)
+
+        self.log = ttk.Text(self.log_frame)
+        self.log.grid(row=0, column=0, pady=5, padx=5, sticky='nsew')
         self.log.configure(state='disabled')
 
-        self.progress = ttk.Progressbar(self.operation_frame, mode='determinate')
-        self.progress.grid(row=2, column=0, pady=5, padx=5, columnspan=3, sticky='ew')
+        self.progress = ttk.Progressbar(self.log_frame, mode='determinate')
+        self.progress.grid(row=1, column=0, pady=5, padx=5, sticky='ew')
 
     def _select_source(self):
         if self.option.get() == 'Folder':
@@ -111,6 +131,7 @@ class BackupPage(ttk.Frame):
         state = 'normal' if enabled else 'disabled'
         self.source_btn.configure(state=state)
         self.option.configure(state='readonly' if enabled else 'disabled')
+        self.destination_option.configure(state='readonly' if enabled else 'disabled')
         self.backup_btn.configure(state=state)
 
     def _append_log(self, message):
@@ -166,6 +187,7 @@ class BackupPage(ttk.Frame):
         source = self.selected_sources
         destination = self.destination.get()
         source_type = self.option.get()
+        destination_type = self.destination_option.get()
 
         if not source or not destination:
             messagebox.showwarning('Backup', 'Select a source and a destination first.')
@@ -185,6 +207,7 @@ class BackupPage(ttk.Frame):
                     self._report_progress,
                     self.cancel_event,
                     self._report_progress_total,
+                    destination_type,
                 )
             except Exception as error:
                 self.after(0, self._append_log, f'Backup failed: {error}')
