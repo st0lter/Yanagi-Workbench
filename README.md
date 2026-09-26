@@ -10,7 +10,7 @@ Yanagi Workbench is an open-source tool made purely in Python. It can do all the
 
 The project follows [Semantic Versioning](https://semver.org/). Dragon names are release codenames; the numeric version remains the official way to identify compatibility and changes.
 
-### v0.1.0 - Wyrm
+### v0.1.0 - Serpent
 
 Current development version.
 
@@ -22,7 +22,7 @@ Current development version.
 - [x] Implement settings section
 - [ ] Check for possible bugs and release
 
-### v0.2.0 - Wyvern
+### v0.2.0 - Salamander
 
 Add a notification system for task status, completion and errors
 - [ ] Define notification levels for information, success, warning and error
@@ -37,9 +37,9 @@ Release the first version of CATS (Controlled Automatic Task Scheduler)
 - [ ] Test task persistence across application restarts
 - [ ] Test notifications for completion, failure and cancellation
 - [ ] Document how to create and manage scheduled tasks
-- [ ] Mark CATS as ready for the Drake release
+- [ ] Mark CATS as ready for release
 
-### v0.3.0 - Drake
+### v0.3.0 - Amphiptere
 
 Expand Yanagi Workbench with data analysis capabilities.
 
