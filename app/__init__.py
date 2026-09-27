@@ -54,7 +54,7 @@ class MenuBar(tk.Menu):
 # Navigation frame class
 class NavigationFrame(ttk.Frame):
     def __init__(self, parent, content_frame):
-        super().__init__(parent)
+        super().__init__(parent, bootstyle='bordered')
         self.content_frame = content_frame
         self._create_widgets()
 
@@ -142,11 +142,11 @@ class ContentFrame(ttk.ScrolledFrame):
 
 class Footer(ttk.Frame):
     def __init__(self, parent):
-        super().__init__(parent)
+        super().__init__(parent, bootstyle='primary')
         self._create_widgets()
 
     def _create_widgets(self):
-        ttk.Label(self, text=f"{DISPLAY_VERSION}", font=FONTS['default']).grid(row=0, column=0, pady=5, padx=10, sticky="w")
+        ttk.Label(self, text=f"{DISPLAY_VERSION}", font=FONTS['default'], bootstyle='@primary').grid(row=0, column=0, pady=5, padx=10, sticky="w")
 
 
 # Main application class
