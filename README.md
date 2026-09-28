@@ -17,9 +17,9 @@ Current development version.
 - [x] Establish the desktop application structure
 - [x] Add the home page and feature navigation
 - [x] Add backup scheme
-- [ ] Add image conversion
+- [x] Add image conversion
 - [x] Add file handling 
-- [x] Implement settings section
+- [ ] Implement settings section
 - [ ] Check for possible bugs and release
 
 ### v0.2.0 - Salamander
