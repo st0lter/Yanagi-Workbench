@@ -1,21 +1,21 @@
 import ttkbootstrap as ttk
-import tkinter as tk
 from tkinter import messagebox
 from app.pages.backup import BackupPage
 from app.pages.file import FilePage
 from app.pages.image import ImagePage
 from app.pages.home import HomePage
 from app.pages.settings import SettingsPage
+from app.handlers.settings import Settings
 
-from app.config import FONTS, MIN_SIZE, TITLE, THEMES
+from app.config import FONTS, TITLE, THEMES
 from app.config.version import DISPLAY_VERSION
 
 
-class MenuBar(tk.Menu):
+class MenuBar(ttk.Menu):
     def __init__(self, parent):
         super().__init__(parent)
 
-        file_menu = tk.Menu(self, tearoff=False)
+        file_menu = ttk.Menu(self, tearoff=False)
         file_menu.add_command(
             label="Home",
             command=lambda: parent.content_frame.show_page(HomePage),
@@ -40,7 +40,7 @@ class MenuBar(tk.Menu):
         file_menu.add_command(label="Exit", command=parent.destroy)
         self.add_cascade(label="File", menu=file_menu)
 
-        help_menu = tk.Menu(self, tearoff=False)
+        help_menu = ttk.Menu(self, tearoff=False)
         help_menu.add_command(
             label="Credits",
             command=lambda: messagebox.showinfo(
@@ -50,6 +50,24 @@ class MenuBar(tk.Menu):
             ),
         )
         self.add_cascade(label="Help", menu=help_menu)
+
+        self._theme_callback = self._apply_theme_colors
+        ttk.on_theme_change(self._theme_callback)
+        self.bind("<Destroy>", self._remove_theme_callback, add="+")
+
+    def _apply_theme_colors(self, style):
+        background = style.colors.primary
+        foreground = ttk.contrast_color(ttk.color_to_rgb(background))
+        self.configure(
+            background=background,
+            foreground=foreground,
+            activebackground=background,
+            activeforeground=foreground,
+        )
+
+    def _remove_theme_callback(self, event):
+        if event.widget is self:
+            ttk.remove_theme_change_callback(self._theme_callback)
 
 # Navigation frame class
 class NavigationFrame(ttk.Frame):
@@ -66,6 +84,7 @@ class NavigationFrame(ttk.Frame):
         self.home_btn = ttk.Button(
             self,
             text="Home",
+            icon="house",
             command=lambda: self._show_page("Home"),
         )
         self.home_btn.grid(row=0, column=0, pady=5, padx=10, sticky="ew")
@@ -73,6 +92,7 @@ class NavigationFrame(ttk.Frame):
         self.backup_btn = ttk.Button(
             self,
             text="Backup",
+            icon="archive",
             command=lambda: self._show_page("Backup"),
         )
         self.backup_btn.grid(row=1, column=0, pady=5, padx=10, sticky="ew")
@@ -80,6 +100,7 @@ class NavigationFrame(ttk.Frame):
         self.file_btn = ttk.Button(
             self,
             text="File Manager",
+            icon="folder2-open",
             command=lambda: self._show_page("File Manager"),
         )
         self.file_btn.grid(row=2, column=0, pady=5, padx=10, sticky="ew")
@@ -87,6 +108,7 @@ class NavigationFrame(ttk.Frame):
         self.image_btn = ttk.Button(
             self,
             text="Image Handler",
+            icon="images",
             command=lambda: self._show_page("Image Handler"),
         )
         self.image_btn.grid(row=3, column=0, pady=5, padx=10, sticky="ew")
@@ -94,6 +116,7 @@ class NavigationFrame(ttk.Frame):
         self.settings_btn = ttk.Button(
             self,
             text="Settings",
+            icon="gear-fill",
             command=lambda: self._show_page("Settings"),
         )
         self.settings_btn.grid(row=5, column=0, pady=5, padx=10, sticky="ew")
@@ -113,7 +136,7 @@ class NavigationFrame(ttk.Frame):
 # Content frame class
 class ContentFrame(ttk.ScrolledFrame):
     def __init__(self, parent):
-        super().__init__(parent)
+        super().__init__(parent, auto_hide=True)
 
         # Set the grid configuration to allow the content frame to expand
         self.grid_rowconfigure(0, weight=1)
@@ -152,9 +175,14 @@ class Footer(ttk.Frame):
 # Main application class
 class App(ttk.Window):
     def __init__(self):
-        super().__init__(themename=THEMES['Tokyo Night (Dark)'])
+        self.settings = Settings()
+        theme_name = next(
+            (name for name, value in THEMES.items() if value == self.settings.theme),
+            'Tokyo Night (Dark)',
+        )
+        super().__init__(themename=THEMES[theme_name])
         self.title(TITLE)
-        self.geometry(MIN_SIZE)
+        self.geometry(self.settings.window_size)
         self.create_widgets()
 
     def create_widgets(self):
