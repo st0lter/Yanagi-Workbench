@@ -5,7 +5,7 @@ from queue import Empty, Queue
 import os
 import tempfile
 import zipfile
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 
 import ttkbootstrap as ttk
 from app.config import FONTS
@@ -62,6 +62,7 @@ class ImagePage(ttk.Frame):
         self.conversion_completed = 0
         self.conversion_succeeded = 0
         self.conversion_errors = 0
+        self.conversion_error_messages = []
         self.cancellation_requested = False
         self._create_widgets()
 
@@ -184,7 +185,9 @@ class ImagePage(ttk.Frame):
             self.original_images.configure(state='normal')
             self.original_images.delete(0, 'end')
             self.original_images.configure(state='readonly')
-            self._append_log(f'Error: no {image_type} images were selected.')
+            messagebox.showwarning(
+                'Image Handler', f'No {image_type} images were selected.', parent=self,
+            )
             self._update_convert_button_state()
             return
 
@@ -254,7 +257,9 @@ class ImagePage(ttk.Frame):
                 self._append_log(f'Converted {Path(second_value).name} to {Path(first_value).name}')
             elif status == 'error':
                 self.conversion_errors += 1
-                self._append_log(f'Failed to convert {Path(first_value).name}: {second_value}')
+                self.conversion_error_messages.append(
+                    f'{Path(first_value).name}: {second_value}'
+                )
 
         if self.conversion_completed < self.conversion_total:
             self.after(100, self._process_conversion_results)
@@ -278,34 +283,60 @@ class ImagePage(ttk.Frame):
         )
         self._update_convert_button_state()
 
-        if self.cancellation_requested:
+        if self.cancellation_requested and not self.conversion_error_messages:
             self._append_log('Conversion cancelled.')
-        elif self.conversion_errors:
-            self._append_log('Conversion completed with errors.')
         else:
-            self._append_log('Conversion completed!')
+            self._append_log('Conversion completed.')
+
+        if self.conversion_error_messages:
+            failures = self.conversion_error_messages[:10]
+            remaining = len(self.conversion_error_messages) - len(failures)
+            if remaining:
+                failures.append(f'...and {remaining} more error(s).')
+            messagebox.showerror(
+                'Image Handler',
+                'Some images could not be converted:\n\n' + '\n'.join(failures),
+                parent=self,
+            )
 
     def convert_images(self):
         if not self.selected_files:
-            self._append_log('Error: select at least one image first.')
+            messagebox.showwarning(
+                'Image Handler', 'Select at least one image first.', parent=self,
+            )
             return
 
         destination_directory = Path(self.destination_path.get())
         if not self.destination_path.get():
-            self._append_log('Error: select a destination path first.')
+            messagebox.showwarning(
+                'Image Handler', 'Select a destination path first.', parent=self,
+            )
             return
 
         source_type = self.from_filetype.get()
         destination_type = self.to_filetype.get()
         if source_type == destination_type:
-            self._append_log('Error: source and destination formats must be different.')
+            messagebox.showwarning(
+                'Image Handler',
+                'Source and destination formats must be different.',
+                parent=self,
+            )
             return
 
-        destination_directory.mkdir(parents=True, exist_ok=True)
+        try:
+            destination_directory.mkdir(parents=True, exist_ok=True)
+        except OSError as error:
+            messagebox.showerror(
+                'Image Handler', f'Unable to create the destination folder:\n{error}',
+                parent=self,
+            )
+            return
+
         self.conversion_total = len(self.selected_files)
         self.conversion_completed = 0
         self.conversion_succeeded = 0
         self.conversion_errors = 0
+        self.conversion_error_messages = []
         self.cancellation_requested = False
         self.progress.configure(maximum=self.conversion_total, value=0)
         self.convert.configure(state='disabled')
@@ -345,7 +376,10 @@ class ImagePage(ttk.Frame):
                 )
                 self.conversion_futures.append(future)
         except Exception as error:
-            self._append_log(f'Error: unable to start conversion ({error})')
+            self.conversion_errors += 1
+            self.conversion_error_messages.append(
+                f'Unable to start conversion: {error}'
+            )
             self.cancellation_requested = True
             if self.cancellation_event is not None:
                 self.cancellation_event.set()
@@ -379,17 +413,25 @@ class ImagePage(ttk.Frame):
         try:
             Path(destination).write_text(self.log.get('1.0', 'end-1c'), encoding='utf-8')
         except OSError as error:
-            self._append_log(f'Error saving log: {error}')
+            messagebox.showerror(
+                'Image Handler', f'Unable to save the log:\n{error}', parent=self,
+            )
             return
         self._append_log(f'Log saved: {destination}')
 
     def save_converted_images_zip(self):
         if self.conversion_executor is not None:
-            self._append_log('Error: wait for the conversion to finish before creating the zip.')
+            messagebox.showwarning(
+                'Image Handler',
+                'Wait for the conversion to finish before creating the ZIP.',
+                parent=self,
+            )
             return
         available_images = [path for path in self.converted_files if path.exists()]
         if not available_images:
-            self._append_log('Error: there are no converted images to zip.')
+            messagebox.showwarning(
+                'Image Handler', 'There are no converted images to ZIP.', parent=self,
+            )
             return
 
         destination = filedialog.asksaveasfilename(
@@ -404,6 +446,9 @@ class ImagePage(ttk.Frame):
                 for image_path in available_images:
                     archive.write(image_path, arcname=image_path.name)
         except OSError as error:
-            self._append_log(f'Error creating zip: {error}')
+            messagebox.showerror(
+                'Image Handler', f'Unable to create the ZIP file:\n{error}',
+                parent=self,
+            )
             return
         self._append_log(f'Converted images saved in: {destination}')

@@ -134,6 +134,7 @@ class FilePage(ttk.Frame):
             bootstyle='info', command=self.save_log,
         )
         self.save_log_button.grid(row=0, column=2, padx=5, pady=5, sticky='ew')
+        self.save_log_button.configure(state='disabled')
 
         self.save_zip_button = ttk.Button(
             self.options_frame, text='Save in zip', icon='file-earmark-zip',
@@ -327,10 +328,10 @@ class FilePage(ttk.Frame):
             messagebox.showwarning('File Manager', 'Choose different source and destination formats.')
             return
 
+        self.save_log_button.configure(state='disabled')
         self.progress.configure(maximum=len(self.selected_files), value=0)
         self.convert_button.configure(state='disabled')
         self.cancel_button.configure(state='normal')
-        self.save_log_button.configure(state='normal')
         self.save_zip_button.configure(state='disabled')
         self.select_origin_button.configure(state='disabled')
         self.select_destination_button.configure(state='disabled')

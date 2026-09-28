@@ -19,8 +19,8 @@ Current development version.
 - [x] Add backup scheme
 - [x] Add image conversion
 - [x] Add file handling 
-- [ ] Implement settings section
-- [ ] Check for possible bugs and release
+- [x] Implement settings section
+- [x] Check for possible bugs and release
 
 ### v0.2.0 - Salamander
 

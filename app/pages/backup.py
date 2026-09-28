@@ -24,7 +24,6 @@ class BackupPage(ttk.Frame):
         self.origin_frame = ttk.Labelframe(self, text='Source and destination')
         self.origin_frame.grid(row=1, column=0, pady=10, padx=10, sticky='nsew')
         self.origin_frame.columnconfigure(2, weight=1)
-        self.origin_frame.columnconfigure(3, weight=1)
 
         ttk.Label(self.origin_frame, text='From:').grid(
             row=0, column=0, pady=5, padx=5, sticky='w',
@@ -87,6 +86,7 @@ class BackupPage(ttk.Frame):
             bootstyle='info', command=self._save_log,
         )
         self.save_log_btn.grid(row=0, column=2, pady=5, padx=5, sticky='ew')
+        self.save_log_btn.configure(state='disabled')
 
         self.log_frame = ttk.Labelframe(self, text='Log')
         self.log_frame.grid(row=3, column=0, pady=10, padx=10, sticky='nsew')
@@ -157,6 +157,7 @@ class BackupPage(ttk.Frame):
         self._set_selection_controls_enabled(True)
         self.convert_btn.configure(state='normal')
         self.cancel_btn.configure(state='disabled')
+        self.save_log_btn.configure(state='normal')
         self.backup_thread = None
         if self.cancel_event.is_set():
             self._append_log('Backup cancelled.')
@@ -193,6 +194,7 @@ class BackupPage(ttk.Frame):
             messagebox.showwarning('Backup', 'Select a source and a destination first.')
             return
 
+        self.save_log_btn.configure(state='disabled')
         self.cancel_event.clear()
         self._set_selection_controls_enabled(False)
         self.convert_btn.configure(state='disabled')
